@@ -33,8 +33,6 @@
     $W = $roller_face**4;
     #echo $W, "\n";
     
-    
-
 
 
     # Perform calculation for Aluminum
@@ -51,7 +49,10 @@
 
     # Aluminum's Deflection Calculation
     $aluminum_D = (($δ*$aluminum_L*$W)/(384*$aluminum_E*$I));
+    $formatted_aluminum_D = number_format($aluminum_D, 5);
 
+    # Aluminum's Roller Classification
+    
 
 
     # Perform calculation for Steel
@@ -66,6 +67,10 @@
 
     # Steel's Deflection Calculation
     $steel_D = (($δ*$steel_L*$W)/(384*$steel_E*$I));
+    $formatted_steel_D = number_format($steel_D, 5);
+
+    # Steel's Roller Classification
+
 
 
     # Perform calculation for Stainless
@@ -80,7 +85,10 @@
 
     # Stainless's Deflection Calculation
     $stainless_D = (($δ*$stainless_L*$W)/(384*$stainless_E*$I));
+    $formatted_stainless_D = number_format($stainless_D, 5);
 
+    # Stainless's Roller Classification
+    
 ?>
 
 <!DOCTYPE html>
@@ -135,15 +143,15 @@
                 <div class="column">
                     <fieldset>
                             <label>Aluminum Deflection:</label>
-                            <span><?php echo ($aluminum_D); ?></span><br>
+                            <span><?php echo ($formatted_aluminum_D); ?></span><br>
                             <br>
                             <br>
                             <label>Steel Deflection:</label>
-                            <span><?php echo ($steel_D); ?></span><br>
+                            <span><?php echo ($formatted_steel_D); ?></span><br>
                             <br>
                             <br>
                             <label>Stainless Deflection:</label>
-                            <span><?php echo ($stainless_D); ?></span><br>
+                            <span><?php echo ($formatted_stainless_D); ?></span><br>
                     </fieldset>
                 </div>
 
