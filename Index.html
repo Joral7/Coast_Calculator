@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<html>
+<head>
+
+    <title>Coast Deflection Calculator</title>
+
+    <link rel="stylesheet" type="text/css" href="main.css">
+
+</head>
+<body>
+    <main>
+
+        <div class="header">
+            <h2>Roller Deflection Calculator</h2>
+        </div>
+
+        <form action="Coast_Calc.php" method="post">
+
+            <div class="row">
+
+                <div class="column">
+                    <fieldset>
+                            <label for="finish_diameter">Finish Diameter:</label>
+                            <input type="number" name="finish_diameter"><br>
+                            <br>
+                            <br>
+                            <label for="inside_diameter">Inside Diameter:</label>
+                            <output type="number" name="inside_diameter"></output><br>
+                            <br>
+                            <br>
+                            <label for="wall_thickness">Wall Thickness:</label>
+                            <input type="number" name="wall_thickness"><br>
+                    </fieldset>                
+                </div>
+
+                <div class="column">
+                    <fieldset>
+                            <label for="roller_face">Roller Face:</label>
+                            <input type="number" name="roller_face"><br>
+                            <br>
+                            <br>
+                            <label for="line_tension">Line Tension:</label>
+                            <input type="number" name="line_tension"></input><br>
+                            <br>
+                            <br>
+                            <label for="wrap_angle">Wrap Angle:</label>
+                            <input type="number" name="wrap_angle"><br>
+                    </fieldset>
+                </div>
+
+                <div class="column">
+                    <fieldset>
+                            <label for="aluminum_D">Aluminum Deflection:</label>
+                            <output type="number" name="aluminum_D"></output></br>
+                            <br>
+                            <br>
+                            <label for="steel_D">Steel Deflection:</label>
+                            <output type="number" name="steel_D"></output><br>
+                            <br>
+                            <br>
+                            <label for="stainless_D">Stainless Deflection:</label>
+                            <output type="number" name="stainless_D"></output><br>
+                    </fieldset>
+                </div>
+
+            </div>
+
+            <div class="footer">
+
+                <input type="submit" value="Submit Query"><br>
+    
+            </div>
+
+        </form>
+
+        
+
+        <div class="footer">
+            <fieldset>
+                <h3>Deflection Classifications</h3>
+                <br>
+                <label for="class_a">Class A - precision or nipped</label>
+                <output type="number" name="class_a"></output><br>
+                <br>
+                <label for="class_b">Class B - dead shaft idlers (most common)</label>
+                <output type="number" name="class_b"></output><br>
+                <br>
+                <label for="class_c">Class C - flexible materials</label>
+                <output type="number" name="class_c"></output><br>
+                <br>
+                <label for="class_d">Class D - conveyors and cores</label>
+                <output type="number" name="class_a"></output><br>
+                <br>
+            </fieldset>
+        </div>
+
+    </main>
+</body>
+</html>
