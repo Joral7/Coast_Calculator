@@ -1,0 +1,2052 @@
+<!--
+    Description:
+    This program is intended to be a deflection calculator for rollers of varying materials.
+    The program will verify and accept input for various dimensions and specifications from 
+    the user and will then perform calculations based on these variables. All equations and 
+    calculations for Dead & Live shaft rollers was sourced from 'The Mechanics of Rollers' 
+    by David Roisum. This calculator is designed to assume the worst-case scenario for a web 
+    guide (180° pulling downward) to ensure that all rollers in a web line will be suitable 
+    for any existing or future web path applications.
+
+
+    Input/Output Variables:
+
+        Column 1:
+
+            units - HTML variable to alter the displayed units on the webpage
+            unitSelect - JavaScript variable to manipulate what units are displayed on change event
+
+            deadOrAlive - HTML variable to determine whether the roller has a 'dead' or 'live' shaft
+                        This will determine if the Bearing-to-Bearing field is necessary in the calculation
+            deadOrAliveSelect - JavaScript variable to enable/disable the Bearing-to-Bearing (b2b) field
+                                if the shaft type is 'dead' (disabled) or 'live' (enabled)
+
+            rollerFace - HTML variable to validate and accept user input for the face of the roller
+            rollerFaceInput - JavaScript variable to validate and accept user input for calculations
+
+            finishDiameter - HTML variable to validate and accept user input for the finish diameter of a roller
+            finishDiameterInput - JavaScript variable to validate and accepte user input for calculations
+            
+            insideDiameter - HTML variable to be used as a placeholder for the inside diameter of a roller
+            insideDiameterOutput - JavaScript variable to validate and accept user input from 'finishDiameterInput'
+                                & 'wallThicknessInput' to calculate 'insideDiameterOutput' see '1. Inner Diameter Equation'
+
+            wallThickness - HTML variable to validate and accept user input for the wall thickness of a roller
+            wallThicknessInput - JavaScript variable to validate and accept user input for calculations
+
+            lineTension - HTML variable to validate and accept user input for the max line tension (PLI) of a web path
+            lineTensionInput - JavaScript variable to validate and accept user input for calculations
+
+            wrapAngle - HTML variable to validate and accept user input for the max wrap angle of a web guide
+            wrapAngleInput - JavaScript variable to validate and accept user input for calculations
+
+            b2b - HTML variable to validate and accept user input for the bearing-to-bearing measurement of a roller
+            b2bInput - JavaScript variable to validate and accept user input for calculations
+
+        Column 2:
+
+    Equations:
+
+    1. Inner Diameter
+        insideDiameterOutput = 'finishDiameterInput' - ('wallThicknessInput' * 2)
+
+    2. Area Moment of Inertia
+        areaMomentOfInertia = (Math.PI/64) * (finishDiameterInput**4 - insideDiameterOutput**4)
+
+    3. Imperial Shell Weight - Aluminum
+        aluminumImpShell = (aluminumImpDensity*(Math.PI/4)*(finishDiameterInput**2 - innerDiameterOutput**2))
+
+    4. Sine calculation for half of the Wrap Angle (Wrap Angle in Radians)
+        wrapAngleRadians = sin((wrapAngleInput*Math.PI/180)/(2))
+        
+    5. Imperial Distibuted Load - Aluminum
+        aluminumImpLoad = ((2*lineTensionInput) + 0 + aluminumImpShell)*(wrapAngleRadians)
+
+    6. Imperial Roller Deflection - Aluminum = (δ * aluminumImpLoad * (rollerFaceInput**4)) / (384 * aluminumImpModulus * areaMomentOfInertia)
+    
+        Where:
+                δ = Deflection of Center (Hold ALT + 235 to type 'δ')
+                aluminumImpLoad = Distributed Load 
+                rollerFaceInput = Face Width of Roller (Raised to the Fourth Power in This Equation)
+                384 = Constant Specific to These Loading and Support Conditions
+                aluminumImpModulus = Shell Modulus of Aluminum
+                areaMomentOfInertia = Area Moment of Inertia of the Shell
+
+
+    Last Updated: 03/21/2025 by Jordan Snow
+-->
+
+
+<!DOCTYPE HTML>
+<html>
+
+    <head>
+    
+        <html lang="en">
+        
+        <meta charset="utf-8" />
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Coast Deflection Calculator</title>
+
+        <link rel="stylesheet" type="text/css" href="Calc.css" />
+
+    </head>
+
+    <body>
+
+        <main>
+
+            <div class="header">
+
+                <h2>Coast Roller Deflection Calculator</h2>
+
+            </div>
+
+                <div id="container">
+
+                    <div class="row">
+
+                        <div id="calculator">
+
+                            <div class="calc">
+
+                                <div class="column">
+
+                                    <h3>Roll & Web Specifications</h3>
+
+                                    <ul class="calc_list">
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="units">Units:</label>
+
+                                                <select name ="units" id="units">
+
+                                                    <option value="Imperial" checked>Imperial</option>
+                                                    <option value="Metric">Metric</option>
+
+                                                </select>
+                                            
+                                            </div>
+                                            <!--
+                                            <script>
+                                            
+                                            const unitSelect = document.getElementById("units");
+
+                                            function displayUnit() {
+
+                                                console.log(unitSelect.value + " Units Selected.")
+
+                                            }
+
+                                            unitSelect.addEventListener("change", displayUnit);
+
+                                            displayUnit();
+
+                                            </script>
+                                            -->
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="deadOrAlive">Dead/Live Shaft:</label>
+
+                                                <select name="deadOrAlive" id="deadOrAlive">
+
+                                                    <option value="Dead" checked>Dead Shaft</option>
+                                                    <option value="Live">Live Shaft</option>
+
+                                                </select>
+                                            
+                                            </div>
+                                            <!--
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function() {
+                                                
+                                                    const deadOrAliveSelect = document.getElementById("deadOrAlive");                                                       
+                                                    const b2b = document.getElementById('b2b');
+                                                    
+                                                    if (deadOrAliveSelect && b2b) {
+
+                                                        deadOrAliveSelect.addEventListener('change', function() {
+
+                                                            console.log(deadOrAliveSelect.value + " Selected.");
+
+                                                            b2b.disabled = deadOrAliveSelect. value != 'Live';
+
+                                                        });
+
+                                                    }
+                                                
+                                                });
+
+
+
+                                            </script>
+                                            -->
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="rollerFace">Roller Face:</label>
+                                                <input type="number" step="0.01" name="rollerFace" id="rollerFace" value="50.0"><br>
+                                                <span id="rollerFaceUnits">in</span>
+
+                                            </div>
+
+                                            <!-- DELETE
+
+                                            <script>
+
+                                                document.getElementById('rollerFace').addEventListener('change', function(){
+                                                
+                                                    const rollerFace = document.getElementById('rollerFace').value;
+
+                                                    fetch('Roller_Deflection.php', {
+
+                                                        method: 'POST',
+                                                        header: {
+
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+
+                                                        },
+                                                        body: 'rollerFace=' + encodeURIComponent(rollerFace),
+                                                    })
+                                                    .then(response => {
+                                                        if (!response.ok) {
+                                                            throw new Error('Network response was not ok');
+                                                        }   
+                                                        return response.json();
+                                                    })
+                                                    .then(data => {
+
+                                                        document.getElementById('output').textContent = 'Roller Face: ' + data.result;
+                                                    })
+
+                                                    .catch(error => {
+
+                                                        console.error('There has been a problem with your fetch operation:', error);
+                                                        document.getElementById('output').textContent = "Error: Could not retrieve data.";
+
+                                                    })
+
+                                                });
+
+                                            </script>
+                                            -->
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="finishDiameter">Finish Diameter:</label>
+                                                <input type="number" step="0.01" name="finishDiameter" id="finishDiameter" value="3.8"><br>
+                                                <span id="finishDiameterUnits">in</span>
+
+                                            </div>
+
+                                            <!-- DELETE
+
+                                            <script>
+
+                                                document.getElementById('finishDiameter').addEventListener('change', function(){
+                                                
+                                                    const finishDiameterInput = document.getElementById('finishDiameter').value;
+
+                                                    fetch('Roller_Deflection.php', {
+
+                                                        method: 'POST',
+                                                        header: {
+
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+
+                                                        },
+                                                        body: 'finishDiameter=' + encodeURIComponent(finishDiameter),
+                                                    })
+                                                    .then(response => {
+                                                        if (!response.ok) {
+                                                            throw new Error('Network response was not ok');
+                                                        }   
+                                                        return response.json();
+                                                    })
+                                                    .then(data => {
+
+                                                        document.getElementById('output').textContent = 'Finish Diameter ' + data.result;
+                                                    })
+
+                                                    .catch(error => {
+
+                                                        console.error('There has been a problem with your fetch operation:', error);
+                                                        document.getElementById('output').textContent = "Error: Could not retrieve data.";
+
+                                                    })
+
+                                                });
+
+                                            </script>
+
+                                            -->
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="insideDiameter">Inside Diameter:</label>
+                                                <input type="number" name="insideDiameter" id="insideDiameter" readonly disabled></input><br>
+                                                <span id="insideDiameterUnits">in</span>
+
+                                            </div>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="wallThickness">Wall Thickness:</label>
+                                                <input type="number" step="0.01" name="wallThickness" id="wallThickness" value="0.0875"><br>
+                                                <span id="wallThicknessUnits">in</span>
+
+                                            </div>
+
+                                        </li>
+                                        <!--
+                                        <script>
+
+                                            document.addEventListener("DOMContentLoaded", function() {
+
+                                                const finishDiameterInput = document.getElementById('finishDiameter');
+                                                const wallThicknessInput = document.getElementById('wallThickness');
+                                                const insideDiameterOutput = document.getElementById('insideDiameter');
+
+                                                function calcInsideDiameter() {
+
+                                                    const finishDiameter = parseFloat(finishDiameterInput.value);
+                                                    const wallThickness = parseFloat(wallThicknessInput.value);
+
+                                                    if (!isNaN(finishDiameter) && !isNaN(wallThickness)) {
+
+                                                        const insideDiameter = finishDiameter - (wallThickness * 2);
+                                                        insideDiameterOutput.value = insideDiameter.toFixed(4);
+
+                                                    } else {
+
+                                                        insideDiameterOutput.value = '';
+
+                                                    }
+
+                                                }
+                                                
+                                                finishDiameterInput.addEventListener('input', calcInsideDiameter);
+                                                wallThicknessInput.addEventListener('input', calcInsideDiameter);
+
+                                                calcInsideDiameter();
+
+                                            });
+
+
+                                        </script>
+                                        -->
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="lineTension">Line Tension:</label>
+                                                <input type="number" step="0.01" name="lineTension" id="lineTension" value="2.0"></input><br>
+                                                <span id="lineTensionUnits">lb/in</span>
+
+                                            </div>
+
+                                        </li>
+
+                                        <li>
+                                            
+                                            <div class="input_wrap">
+
+                                                <label for="wrapAngle">Wrap Angle:</label>
+                                                <input type="number" step="0.01" name="wrapAngle" id="wrapAngle" value="90"><br>
+                                                <span id="wrapAngleUnits">degrees</span>
+
+                                            </div>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="b2b">Bearing-to-Bearing:</label>
+                                                <input type="number" step="0.01" name="b2b" id="b2b" disabled><br>
+                                                <span id="b2bUnits">in</span>
+
+                                            </div>
+
+                                        </li>
+
+                                    </ul>
+
+                                </div>
+
+                                <div class="column">
+
+                                    <h3>For Quoting Purposes</h3>
+
+                                    <ul class="calc_list">
+
+                                        <li>
+
+                                            
+                                                
+                                            <div class="input_wrap">
+
+                                                <label for="roller_type">Roller Type:</label>
+
+                                                <select name="roller_type" id="roller_type">
+
+                                                    <option value="ROLLER_1" checked>ROLLER_1</option>
+                                                    <option value="ROLLER_2">ROLLER_2</option>
+                                                    <option value="ROLLER_3">ROLLER_3</option>
+
+                                                </select>
+
+                                            </div>
+
+                                            <script>
+                                            
+                                                const rollerSelect = document.getElementById("roller_type");
+    
+                                                function displayRoller() {
+    
+                                                    console.log(rollerSelect.value + " Roller Type Selected.")
+    
+                                                }
+    
+                                                rollerSelect.addEventListener("change", displayRoller);
+    
+                                                displayRoller();
+    
+                                            </script>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="shaftLength">Shaft Length:</label>
+                                                <input type="number" step="0.01" name="shaftLength" id="shaftLength" value="20.0"></input><br>
+                                                <span id="shaftLengthUnits">in</span>
+
+                                            </div>
+
+                                            <script>
+                                                
+                                                document.addEventListener("DOMContentLoaded", function() {
+
+                                                    const shaftLength = document.getElementById("shaft_length");
+        
+                                                    function displayShaftLength() {
+                                                        
+                                                        if (shaftLength) {
+
+                                                            console.log(shaftLength.value + " Shaft Length Specified.")
+                                                        
+                                                        }
+                                                    }
+                                                    
+                                                    if (shaftLength) {
+
+                                                        shaftLength.addEventListener("change", displayShaftLength);
+
+                                                    }
+
+                                                    displayShaftLength();
+
+                                                })
+    
+                                            </script>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="shaft_tap">Shaft Tap:</label>
+
+                                                <select name="shaft_tap" id="shaft_tap">
+
+                                                    <option value="SHAFT_TAP_1" checked>SHAFT_TAP_1</option>
+                                                    <option value="SHAFT_TAP_2">SHAFT_TAP_2</option>
+                                                    <option value="SHAFT_TAP_3">SHAFT_TAP_3</option>
+
+                                                </select>
+
+                                            </div>
+
+                                            <script>
+                                            
+                                                const shaftTapSelect = document.getElementById("shaft_tap");
+    
+                                                function displayShaftTap() {
+    
+                                                    console.log(shaftTapSelect.value + " Shaft Tap Selected.")
+    
+                                                }
+    
+                                                shaftTapSelect.addEventListener("change", displayShaftTap);
+    
+                                                displayShaftTap();
+    
+                                            </script>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="webWidth">Web Width:</label>
+                                                <input type="number" min="0.0" step="0.1" name="webWidth" id="webWidth" value="0.0"></input>
+                                                <span id="webWidthUnits">in</span>
+
+                                            </div>
+
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function() {
+                                                
+                                                    const webWidth = document.getElementById("web_width");
+
+                                                    function displayWebWidth() {
+
+                                                        if (webWidth) {
+
+                                                        console.log(webWidth.value + " Web Width Specified.")
+
+                                                        }
+                                                    }
+
+                                                    if (webWidth) {
+
+                                                        webWidth.addEventListener("change", displayWebWidth);
+                                                    }
+
+                                                displayWebWidth();
+
+                                                })
+
+                                            </script>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="webSpeed">Web Speed:</label>
+                                                <input type="number" min="0.0" step="0.1" name="webSpeed" id="webSpeed" value="0.0"></input>
+                                                <span id="webSpeedUnits">fpm</span>
+
+                                            </div>
+
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function() {
+                                                
+                                                    const webSpeed = document.getElementById("web_speed");
+
+                                                    function displayWebSpeed() {
+
+                                                        if (webSpeed) {
+
+                                                        console.log(webSpeed.value + " Web Speed Specified.")
+
+                                                        }
+                                                    }
+
+                                                    if (webSpeed) {
+
+                                                        webSpeed.addEventListener("change", displayWebSpeed);
+                                                    }
+
+                                                displayWebSpeed();
+
+                                                })
+
+                                            </script>
+
+                                        </li>
+
+                                        <li>
+                                            <div class="input_wrap">
+
+                                                <label for="tempTolerance">Temperature Tolerance:</label>
+                                                <input type="number" min="0.0" max="200.0" step="0.1" name="tempTolerance" id="tempTolerance" value="60.0"></input><br>
+                                                <span id="tempToleranceUnits">F</span>
+
+                                            </div>
+
+                                            <script>
+                                                
+                                                document.addEventListener("DOMContentLoaded", function() {
+
+                                                    const tempTolerance = document.getElementById("temp_tolerance");
+        
+                                                    function displayTempTolerance() {
+                                                        
+                                                        if (tempTolerance) {
+
+                                                            console.log(tempTolerance.value + " Temperature Tolerance Specified.")
+                                                        
+                                                        }
+                                                    }
+                                                    
+                                                    if (tempTolerance) {
+
+                                                        tempTolerance.addEventListener("change", displayTempTolerance);
+
+                                                    }
+
+                                                    displayTempTolerance();
+
+                                                })
+
+                                            </script>
+
+                                        </li>
+
+                                        <li>
+
+                                            <div class="input_wrap">
+
+                                                <label for="coating">Coating:</label>
+
+                                                <select name="coating" id="coating">
+
+                                                    <option value="COATING_1" checked>COATING_1</option>
+                                                    <option value="COATING_2">COATING_2</option>
+                                                    <option value="COATING_3">COATING_3</option>
+
+                                                </select>
+
+                                            </div>
+                                        
+                                            <script>
+                                            
+                                                const coatingSelect = document.getElementById("coating");
+    
+                                                function displayCoat() {
+    
+                                                    console.log(coatingSelect.value + " Coating Selected.")
+    
+                                                }
+    
+                                                coatingSelect.addEventListener("change", displayCoat);
+    
+                                                displayCoat();
+    
+                                            </script>
+
+                                        </li>
+                                        <!--
+                                        <script>
+        
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                
+                                                const unitSelect = document.getElementById('units');
+                                                const deadOrAliveSelect = document.getElementById('deadOrAlive');                                                       
+                                                const b2b = document.getElementById('b2b');
+                                                
+                                                const rollerFaceUnits = document.getElementById('rollerFaceUnits');
+                                                const finishDiameterUnits = document.getElementById('finishDiameterUnits');
+                                                const insideDiameterUnits = document.getElementById('insideDiameterUnits');
+                                                const wallThicknessUnits = document.getElementById('wallThicknessUnits');
+                                                const lineTensionUnits = document.getElementById('lineTensionUnits');
+                                                const wrapAngleUnits = document.getElementById('wrapAngleUnits');
+                                                const b2bUnits = document.getElementById('b2bUnits');
+                                                const shaftLengthUnits = document.getElementById('shaftLengthUnits');
+                                                const webWidthUnits = document.getElementById('webWidthUnits');
+                                                const webSpeedUnits = document.getElementById('webSpeedUnits');
+                                                const tempToleranceUnits = document.getElementById('tempToleranceUnits');
+                                                const aluminumDeflectionUnits = document.getElementById('aluminumDeflectionUnits');
+                                                const steelDeflectionUnits = document.getElementById('steelDeflectionUnits');
+                                                const stainlessDeflectionUnits = document.getElementById('stainlessDeflectionUnits');
+                                    
+                                                const finishDiameterInput = document.getElementById('finishDiameter');
+                                                const wallThicknessInput = document.getElementById('wallThickness');
+                                                const insideDiameterOutput = document.getElementById('insideDiameter');
+                                    
+                                                function calcInsideDiameter() {
+                                    
+                                                    const finishDiameter = parseFloat(finishDiameterInput.value);
+                                                    const wallThickness = parseFloat(wallThicknessInput.value);
+                                    
+                                                    if (!isNaN(finishDiameter) && !isNaN(wallThickness)) {
+                                    
+                                                        const insideDiameter = finishDiameter - (wallThickness * 2);
+                                                        insideDiameterOutput.value = insideDiameter.toFixed(4);
+                                    
+                                                    } else {
+                                    
+                                                        insideDiameterOutput.value = '';
+                                    
+                                                    }
+                                    
+                                                }
+                                                
+                                    
+                                                function updateUnits() {
+                                    
+                                                    const selectedUnits = unitSelect.value;
+                                                    const isImperial = selectedUnits === "Imperial";
+                                    
+                                                    rollerFaceUnits.textContent = isImperial ? "in" : "mm";
+                                                    finishDiameterUnits.textContent = isImperial ? "in" : "mm";
+                                                    insideDiameterUnits.textContent = isImperial ? "in" : "mm";
+                                                    wallThicknessUnits.textContent = isImperial ? "in" : "mm";
+                                                    lineTensionUnits.textContent = isImperial ? "lb/in" : "N/m";
+                                                    wrapAngleUnits.textContent = "degrees";
+                                                    b2bUnits.textContent = isImperial ? "in" : "mm";
+                                                    shaftLengthUnits.textContent = isImperial ? "in" : "mm";
+                                                    webWidthUnits.textContent = isImperial ? "in" : "mm";
+                                                    webSpeedUnits.textContent = isImperial ? "fpm" : "m/min";
+                                                    tempToleranceUnits.textContent = isImperial ? "F" : "C";
+                                                    aluminumDeflectionUnits.textContent = isImperial ? "in" : "mm";
+                                                    steelDeflectionUnits.textContent = isImperial ? "in" : "mm";
+                                                    stainlessDeflectionUnits.textContent = isImperial ? "in" : "mm";
+                                    
+                                                    calcInsideDiameter();
+                                    
+                                                }
+                                    
+                                                unitSelect.addEventListener('change', updateUnits);
+                                    
+                                                if (deadOrAliveSelect && b2b) {
+                                    
+                                                    deadOrAliveSelect.addEventListener('change', function() {
+                                    
+                                                        console.log(deadOrAliveSelect.value + " Selected.");
+                                    
+                                                        b2b.disabled = deadOrAliveSelect. value != 'Live';
+                                    
+                                                    });
+                                    
+                                                }
+                                    
+                                                finishDiameterInput.addEventListener('input', calcInsideDiameter);
+                                                wallThicknessInput.addEventListener('input', calcInsideDiameter);
+                                    
+                                                updateUnits();
+                                    
+                                            });
+                                            
+                                        </script>
+                                        -->
+                                    </ul>
+                                </div>
+
+                                <div class="column">
+
+                                    <h3>Deflection Classifications</h3>
+
+                                    <ul class="calc_list">
+
+                                        <li>
+
+                                            <label for="aluminumDeflection">Aluminum Deflection:</label>
+                                            <input type="number" name="aluminumDeflection" id="aluminumDeflection" readonly disabled></input></br>
+                                            <span id="aluminumDeflectionUnits">in</span>
+
+                                        </li>    
+                                        
+                                        <li>
+
+                                            <label for="steelDeflection">Steel Deflection:</label>
+                                            <input type="number" name="steelDeflection" id="steelDeflection" readonly disabled></input><br>
+                                            <span id="steelDeflectionUnits">in</span>
+
+                                        </li>
+
+                                        <li>
+
+                                            <label for="stainlessDeflection">Stainless Deflection:</label>
+                                            <input type="number" name="stainlessDeflection" id="stainlessDeflection" readonly disabled></input><br>
+                                            <span id="stainlessDeflectionUnits">in</span>
+
+                                        </li>
+
+                                        <script>
+
+
+
+                                        </script>
+                                        
+                                    </ul>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+            
+                    <div class="footer">
+
+                        <button type="FRQ" id="FRQ">Request A Quote<br>
+        
+                    </div>
+
+                    <div class="footer">
+
+                        <fieldset>
+                            <h3>Deflection Classifications</h3>
+                            <br>
+                            <label for="class_a">Class A - precision or nipped</label>
+                            <output type="number" name="class_a"></output><br>
+                            <br>
+                            <label for="class_b">Class B - dead shaft idlers (most common)</label>
+                            <output type="number" name="class_b"></output><br>
+                            <br>
+                            <label for="class_c">Class C - flexible materials</label>
+                            <output type="number" name="class_c"></output><br>
+                            <br>
+                            <label for="class_d">Class D - conveyors and cores</label>
+                            <output type="number" name="class_a"></output><br>
+                            <br>
+                        </fieldset>
+
+                    </div>
+
+                </div>
+            
+        </main>
+
+        <script>
+        
+            document.addEventListener('DOMContentLoaded', function() {
+                
+                const unitSelect = document.getElementById('units');
+                const deadOrAliveSelect = document.getElementById('deadOrAlive');                                                       
+                const b2b = document.getElementById('b2b');
+                
+                const rollerFaceUnits = document.getElementById('rollerFaceUnits');
+                const finishDiameterUnits = document.getElementById('finishDiameterUnits');
+                const insideDiameterUnits = document.getElementById('insideDiameterUnits');
+                const wallThicknessUnits = document.getElementById('wallThicknessUnits');
+                const lineTensionUnits = document.getElementById('lineTensionUnits');
+                const wrapAngleUnits = document.getElementById('wrapAngleUnits');
+                const b2bUnits = document.getElementById('b2bUnits');
+                const shaftLengthUnits = document.getElementById('shaftLengthUnits');
+                const webWidthUnits = document.getElementById('webWidthUnits');
+                const webSpeedUnits = document.getElementById('webSpeedUnits');
+                const tempToleranceUnits = document.getElementById('tempToleranceUnits');
+                const aluminumDeflectionUnits = document.getElementById('aluminumDeflectionUnits');
+                const steelDeflectionUnits = document.getElementById('steelDeflectionUnits');
+                const stainlessDeflectionUnits = document.getElementById('stainlessDeflectionUnits');
+                
+                const rollerFaceInput = document.getElementById('rollerFace');
+                const finishDiameterInput = document.getElementById('finishDiameter');
+                const wallThicknessInput = document.getElementById('wallThickness');
+                const insideDiameterOutput = document.getElementById('insideDiameter');
+                const lineTensionInput = document.getElementById('lineTension');
+                const wrapAngleInput = document.getElementById('wrapAngle');
+                const b2bInput = document.getElementById('b2b');
+                const shaftLengthInput = document.getElementById('shaftLength');
+                const webWidthInput = document.getElementById('webWidth');
+                const webSpeedInput = document.getElementById('webSpeed');
+                const tempToleranceInput = document. getElementById('tempTolerance');
+    
+                function calcInsideDiameter() {
+    
+                    const finishDiameter = parseFloat(finishDiameterInput.value);
+                    const wallThickness = parseFloat(wallThicknessInput.value);
+    
+                    if (!isNaN(finishDiameter) && !isNaN(wallThickness)) {
+    
+                        const insideDiameter = finishDiameter - (wallThickness * 2);
+                        insideDiameterOutput.value = insideDiameter.toFixed(4);
+    
+                    } else {
+    
+                        insideDiameterOutput.value = '';
+    
+                    }
+
+                    originalInsideDiameterValue = insideDiameterOutput.value;
+                    console.log(originalInsideDiameterValue);
+    
+                }
+    
+                function updateUnits() {
+    
+                    const selectedUnits = unitSelect.value;
+                    const isImperial = selectedUnits === "Imperial";
+
+                    const selectedDeadOrAlive = deadOrAliveSelect.value;
+                    const isDead = selectedDeadOrAlive === "Dead";
+    
+                    rollerFaceUnits.textContent = isImperial ? "in" : "mm";
+                    finishDiameterUnits.textContent = isImperial ? "in" : "mm";
+                    insideDiameterUnits.textContent = isImperial ? "in" : "mm";
+                    wallThicknessUnits.textContent = isImperial ? "in" : "mm";
+                    lineTensionUnits.textContent = isImperial ? "lb/in" : "N/m";
+                    wrapAngleUnits.textContent = "deg";
+                    b2bUnits.textContent = isImperial ? "in" : "mm";
+                    shaftLengthUnits.textContent = isImperial ? "in" : "mm";
+                    webWidthUnits.textContent = isImperial ? "in" : "mm";
+                    webSpeedUnits.textContent = isImperial ? "fpm" : "m/min";
+                    tempToleranceUnits.textContent = isImperial ? "F" : "C";
+                    aluminumDeflectionUnits.textContent = isImperial ? "in" : "mm";
+                    steelDeflectionUnits.textContent = isImperial ? "in" : "mm";
+                    stainlessDeflectionUnits.textContent = isImperial ? "in" : "mm";
+    
+                    calcInsideDiameter();
+
+                    return {
+
+                        imperial: isImperial,
+                        dead: isDead
+
+                    }
+    
+                }
+
+
+                unitSelect.addEventListener('change', function() {
+
+                    const unitAndShaftState = updateUnits();
+                    updateConsoleLog(unitAndShaftState);
+                    unitConversion(unitAndShaftState);
+                    imperialDeflection();
+                    metricDeflection();
+
+                });
+    
+
+                if (deadOrAliveSelect && b2b) {
+    
+                    deadOrAliveSelect.addEventListener('change', function() {
+
+                        const unitAndShaftState = updateUnits();
+
+                        updateConsoleLog(unitAndShaftState);
+
+                        b2b.disabled = deadOrAliveSelect. value !== 'Live';
+
+                        imperialDeflection();
+                        metricDeflection();
+                    });
+    
+                }
+    
+                rollerFaceInput.addEventListener('input', function(){
+
+                    originalRollerFaceValue = parseFloat(this.value);
+                    console.log(originalRollerFaceValue);
+                    const unitAndShaftState = updateUnits();
+                    
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+
+                })
+
+                finishDiameterInput.addEventListener('input', function(){
+                    
+                    originalFinishDiameterValue = parseFloat(this.value);
+                    console.log(originalFinishDiameterValue);
+                    console.log(typeof originalFinishDiameterValue);
+                    const unitAndShaftState = updateUnits();
+                    calcInsideDiameter();
+                    
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+
+                });
+
+                insideDiameterOutput.addEventListener('change', function(){
+
+                    originalInsideDiameterValue = parseFloat(insideDiameterOutput);
+                    console.log(originalInsideDiameterValue);
+                    const unitAndShaftState = updateUnits();
+                    /*
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+                    */
+
+                });
+
+                wallThicknessInput.addEventListener('input', function(){
+
+                    originalWallThicknessValue = parseFloat(this.value);
+                    console.log(originalWallThicknessValue);
+                    const unitAndShaftState = updateUnits();
+                    calcInsideDiameter();
+                    
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+
+
+                });
+
+                lineTensionInput.addEventListener('input', function(){
+
+                    originalLineTensionValue = parseFloat(this.value);
+                    console.log(originalLineTensionValue);
+                    const unitAndShaftState = updateUnits();
+                    
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+
+
+                })
+                
+                wrapAngleInput.addEventListener('input', function(){
+
+                    originalWrapAngleValue = parseFloat(this.value);
+                    console.log(originalWrapAngleValue);
+                    const unitAndShaftState = updateUnits();
+                    
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+
+
+                })
+
+                b2bInput.addEventListener('input', function(){
+
+                    originalb2bValue = parseFloat(this.value);
+                    console.log(originalb2bValue);
+                    const unitAndShaftState = updateUnits();
+                    /*
+                    if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection();
+
+                    } else {
+
+                        console.log("Ruined.")
+
+                    }
+                    */
+
+                })
+
+                shaftLengthInput.addEventListener('input', function(){
+
+                    originalShaftLengthValue = parseFloat(this.value);
+                    console.log(originalShaftLengthValue);
+                    const unitAndShaftState = updateUnits();
+
+                })
+
+                webWidthInput.addEventListener('input', function(){
+
+                    originalWebWidthValue = parseFloat(this.value);
+                    console.log(originalWebWidthValue);
+                    const unitAndShaftState = updateUnits();
+
+                })
+
+                webSpeedInput.addEventListener('input', function(){
+
+                    originalWebSpeedValue = parseFloat(this.value);
+                    console.log(originalWebSpeedValue);
+                    const unitAndShaftState = updateUnits();
+
+                })
+
+                tempToleranceInput.addEventListener('input', function(){
+
+                    originalTempToleranceValue = parseFloat(this.value);
+                    console.log(originalTempToleranceValue);
+                    const unitAndShaftState = updateUnits();
+
+                })
+
+                updateUnits();
+
+
+                function updateConsoleLog(unitAndShaftState) {
+
+                    if (unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        console.log("Imperial units and Dead shaft selected");
+                        //unitConversion(unitAndShaftState);
+                        imperialDeflection();
+
+                    } else if (!unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        console.log("Metric units and Dead shaft selected");
+                        //unitConversion(unitAndShaftState);
+                        metricDeflection();
+
+                    } else if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        console.log("Imperial units and Live shaft selected");
+
+                    } else {
+
+                        console.log("Metric units and Live Shaft selected");
+
+                    }
+
+                }
+
+                function unitConversion(unitAndShaftState, calcInsideDiameter) {
+
+                    /*
+                    const rollerFace = parseFloat(rollerFaceInput.value);
+                    const finishDiameter = parseFloat(finishDiameterInput.value);
+                    const insideDiameter = parseFloat(insideDiameterOutput.value);
+                    const wallThickness = parseFloat(wallThicknessInput.value);
+                    const lineTension = parseFloat(lineTensionInput.value);
+                    const wrapAngle = parseFloat(wrapAngleInput.value);
+                    */
+
+                    console.log("unitConversion called");
+
+                    console.log("unitAndShaftState.imperial:", unitAndShaftState.imperial);
+
+                    try {
+
+                        if (isNaN(originalRollerFaceValue)) {
+
+                            throw new Error("Invalid Roller Face Value. Conversion Cancelled");
+
+                        }
+
+                        const rollerFaceImp = originalRollerFaceValue / 25.4;
+                        const rollerFaceMet = originalRollerFaceValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            rollerFaceInput.value = rollerFaceImp.toString();
+                            originalRollerFaceValue = parseFloat(rollerFaceInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            rollerFaceInput.value = rollerFaceMet.toString();
+                            originalRollerFaceValue = parseFloat(rollerFaceInput.value);
+
+                        }
+                    
+                    }
+                    
+                    catch (error) {
+
+                        console.error("Error in unitConversion:", error.message);
+
+                        alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalFinishDiameterValue)) {
+
+                            throw new Error("Invalid Finish Diameter Value. Conversion Cancelled");
+
+                        }
+
+                        const finishDiameterImp = originalFinishDiameterValue / 25.4;
+                        const finishDiameterMet = originalFinishDiameterValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            finishDiameterInput.value = finishDiameterImp.toString();
+                            originalFinishDiameterValue = parseFloat(finishDiameterInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            finishDiameterInput.value = finishDiameterMet.toString();
+                            originalFinishDiameterValue = parseFloat(finishDiameterInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalInsideDiameterValue)) {
+
+                            throw new Error("Invalid Inside Diameter Value. Conversion Cancelled");
+
+                        }
+
+                        const insideDiameterImp = originalInsideDiameterValue / 25.4;
+                        const insideDiameterMet = originalInsideDiameterValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            insideDiameterOutput.value = insideDiameterImp.toString();
+                            originalInsideDiameterValue = parseFloat(insideDiameterOutput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            insideDiameterOutput.value = insideDiameterMet.toString();
+                            originalInsideDiameterValue = parseFloat(insideDiameterOutput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalWallThicknessValue)) {
+
+                            throw new Error("Invalid Wall Thickness Value. Conversion Cancelled");
+
+                        }
+
+                        const wallThicknessImp = originalWallThicknessValue / 25.4;
+                        const wallThicknessMet = originalWallThicknessValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            wallThicknessInput.value = wallThicknessImp.toString();
+                            originalWallThicknessValue = parseFloat(wallThicknessInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            wallThicknessInput.value = wallThicknessMet.toString();
+                            originalWallThicknessValue = parseFloat(wallThicknessInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalLineTensionValue)) {
+
+                            throw new Error("Invalid Line Tension Value. Conversion Cancelled");
+
+                        }
+
+                        const lineTensionImp = originalLineTensionValue * 8.8507457673787;
+                        const lineTensionMet = originalLineTensionValue / 8.8507457673787;
+
+                        if (unitAndShaftState.imperial) {
+
+                            lineTensionInput.value = lineTensionImp.toString();
+                            originalLineTensionValue = parseFloat(lineTensionInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            lineTensionInput.value = lineTensionMet.toString();
+                            originalLineTensionValue = parseFloat(lineTensionInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+                    /*
+                    try {
+
+                        if (isNaN(originalWrapAngleValue)) {
+
+                            throw new Error("Invalid Wrap Angle Value. Conversion Cancelled");
+
+                        }
+
+                        const wrapAngleImp = originalWrapAngleValue / 25.4;
+                        const wrapAngleMet = originalWrapAngleValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            wrapAngleInput.value = wrapAngleImp.toString();
+                            originalWrapAngleValue = parseFloat(wrapAngleInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            wrapAngleInput.value = wrapAngleMet.toString();
+                            originalWrapAngleValue = parseFloat(wrapAngleInput.value);
+
+                        }
+
+                        }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+                    */
+                    try {
+
+                        if (isNaN(originalb2bValue)) {
+
+                            throw new Error("Invalid Bearing to Bearing Value. Conversion Cancelled");
+
+                        }
+
+                        const b2bImp = originalb2bValue / 25.4;
+                        const b2bMet = originalb2bValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            b2bInput.value = b2bImp.toString();
+                            originalb2bValue = parseFloat(b2bInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            b2bInput.value = b2bMet.toString();
+                            originalb2bValue = parseFloat(b2bInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalShaftLengthValue)) {
+
+                            throw new Error("Invalid Shaft Length Value. Conversion Cancelled");
+
+                        }
+
+                        const shaftLengthImp = originalShaftLengthValue / 25.4;
+                        const shaftLengthMet = originalShaftLengthValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            shaftLengthInput.value = shaftLengthImp.toString();
+                            originalShaftLengthValue = parseFloat(shaftLengthInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            shaftLengthInput.value = shaftLengthMet.toString();
+                            originalShaftLengthValue = parseFloat(shaftLengthInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalWebWidthValue)) {
+
+                            throw new Error("Invalid Web Width Value. Conversion Cancelled");
+
+                        }
+
+                        const webWidthImp = originalWebWidthValue / 25.4;
+                        const webWidthMet = originalWebWidthValue * 25.4;
+
+                        if (unitAndShaftState.imperial) {
+
+                            webWidthInput.value = webWidthImp.toString();
+                            originalWebWidthValue = parseFloat(webWidthInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            webWidthInput.value = webWidthMet.toString();
+                            originalWebWidthValue = parseFloat(webWidthInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalWebSpeedValue)) {
+
+                            throw new Error("Invalid Web Speed Value. Conversion Cancelled");
+
+                        }
+
+                        const webSpeedImp = originalWebSpeedValue * 3.2808399;
+                        const webSpeedMet = originalWebSpeedValue / 3.2808399;
+
+                        if (unitAndShaftState.imperial) {
+
+                            webSpeedInput.value = webSpeedImp.toString();
+                            originalWebSpeedValue = parseFloat(webSpeedInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            webSpeedInput.value = webSpeedMet.toString();
+                            originalWebSpeedValue = parseFloat(webSpeedInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                    try {
+
+                        if (isNaN(originalTempToleranceValue)) {
+
+                            throw new Error("Invalid Temperature Value. Conversion Cancelled");
+
+                        }
+
+                        const tempToleranceImp = ((originalTempToleranceValue * (9/5)) + 32);
+                        const tempToleranceMet = ((originalTempToleranceValue - 32) * (5/9));
+
+                        if (unitAndShaftState.imperial) {
+
+                            tempToleranceInput.value = tempToleranceImp.toString();
+                            originalTempToleranceValue = parseFloat(tempToleranceInput.value);
+
+                        } else if (!unitAndShaftState.metric) {
+
+                            tempToleranceInput.value = tempToleranceMet.toString();
+                            originalTempToleranceValue = parseFloat(tempToleranceInput.value);
+
+                        }
+
+                    }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+
+                }
+                    /*
+                    try {
+
+                        if (isNaN(originalFinishDiameterValue)) {
+
+                            throw new Error("Invalid Finish Diameter Value. Conversion Cancelled");
+
+                        }
+
+                        if (unitAndShaftState.imperial && originalFinishDiameterValue) {
+
+                            // Convert mm to in
+                            finishDiameterInput.value = originalFinishDiameterValue / 25.4;
+                            console.log(finishDiameterInput.value);
+                            if (isNaN(finishDiameterInput)) {
+
+                                throw new Error("Finish Diameter Imperial Conversion resulted in Nan.");
+
+                            }
+
+                        } else if (!unitAndShaftState.imperial && originalFinishDiameterValue) {
+
+                            // Convert in to mm
+                            finishDiameterInput.value = originalFinishDiameterValue * 25.4;
+                            console.log(finishDiameterInput.value);
+                            if (isNaN(finishDiameterConversion)) {
+
+                                throw new Error("Finish Diameter Metric Conversion resulted in Nan.");
+
+                            }
+
+                            finishDiameterInput.value = finishDiameterInput.toString();
+                            originalFinishDiameterValue = parseFloat(finishDiameterInput.value);
+                            console.log(originalFinishDiameterValue);
+                            console.log(typeof originalFinishDiameterValue);
+
+                        }
+
+                        }
+
+                    catch (error) {
+
+                    console.error("Error in unitConversion:", error.message);
+
+                    alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+                    */
+                    /*
+
+                    try {
+
+                        if (isNaN(originalFinishDiameterValue)) {
+
+                            throw new Error("Invalid Finish Diameter Value. Conversion Cancelled");
+
+                        }
+
+                        if (unitAndShaftState.imperial && originalFinishDiameterValue) {
+
+                            // Convert mm to in
+                            const finishDiameterConversion = originalFinishDiameterValue / 25.4;
+                            if (isNaN(finishDiameterConversion)) {
+
+                                throw new Error("Finish Diameter Imperial Conversion resulted in Nan.");
+
+                            }
+
+                        } else if (!unitAndShaftState.imperial && originalFinishDiameterValue) {
+
+                            // Convert in to mm
+                            const finishDiameterConversion = originalFinishDiameterValue * 25.4;
+                            if (isNaN(finishDiameterConversion)) {
+
+                                throw new Error("Finish Diameter Metric Conversion resulted in Nan.");
+
+                            }
+
+                            finishDiameterInput.value = finishDiameterConversion.toString();
+                            originalFinishDiameterValue = parseFloat(finishDiameterInput.value);
+                            console.log(originalFinishDiameterValue);
+                            console.log(typeof originalFinishDiameterValue);
+
+                        }
+                    
+                    }
+
+                    catch (error) {
+
+                        console.error("Error in unitConversion:", error.message);
+
+                        alert("An error occurred during unit conversion: " + error.message);
+
+                    }
+                    */
+                //}
+
+
+                function imperialDeflection() {
+
+                    /* 
+                        Define Constant Density & Modulus Values of Metals (Imperial)
+                        Density Units (lb/in^3)
+                        Modulus Units (lb/in^2)
+                    */
+
+                    // Aluminum Density & Modulus Values (Imperial)
+                    const aluminumImpDensity = 0.098;
+                    const aluminumImpModulus = 1e7;
+
+                    // Steel Density & Modulus Values (Imperial)
+                    const steelImpDensity = 0.284;
+                    const steelImpModulus = 2.9e7;
+
+                    // Stainless Density & Modulus Values (Imperial)
+                    const stainlessImpDensity = 0.2890183;
+                    const stainlessImpModulus = 2.8e7;
+
+
+                    /* 
+                        Define Constant Deflection of Center Value (Imperial)
+                        δ Units (in)
+                    */
+                    const δ = 5;
+
+
+                    /* 
+                        Define Area Moment of Inertia (Imperial)
+                        Finish Diameter & Inside Diameter Units (in)
+                        Area Moment of Inertia Units (in^4)
+                    */
+
+                    // Parse the Values of 'finishDiameterInput' & 'insideDiameterInput' to Use in Calculation
+                    const finishDiameter = parseFloat(finishDiameterInput.value);
+                    const insideDiameter = parseFloat(insideDiameterOutput.value);
+
+                    // Define Constant Area Moment of Inertia (Imperial)
+                    const areaMomentOfInertia = (Math.PI / 64) * (finishDiameter ** 4 - insideDiameter ** 4);
+
+                    /*
+                        Define the Value of Wrap Angle to Use in the 'Total Distributed Load' Calculation
+                        This Deflection Equation Assumes That the Rollers Are Wrapped 180° Pulling Downward
+                        Therefore We Can Also Assume This Value is '1' When the Wrap Angle is 180°
+                        The Below Sine Calculation is to Provide a More Accurate Deflection Calculation Based on the Wrap Angle Value (0°-180°)
+                        Wrap Angle Units (degrees)
+                        Wrap Angle Radians (radians)
+                    */
+
+                    // Parse the Value of 'wrapAngleInput' to Use in Calculation
+                    const wrapAngle = parseFloat(wrapAngleInput.value);
+
+                    // Sine Calculation for Half of the Wrap Angle (Wrap Angle in Radians)
+                    const wrapAngleRadians = Math.sin((wrapAngle * Math.PI / 180) / (2));
+
+
+                    /* 
+                        Define Aluminum Shell Weight (Imperial)
+                        Finish Diameter & Inside Diameter Units (in)
+                        Aluminum Shell Weight (lb/in)
+                    */
+                    const aluminumImpShell = (aluminumImpDensity * (Math.PI / 4) * (finishDiameter ** 2 - insideDiameter ** 2));
+
+
+                    /* 
+                        Define Aluminum Distributed Load (Imperial)
+                        Line Tension Units (lb/in)
+                        Aluminum Distributed Load (lb/in)
+                        Aluminum Shell Weight (lb/in)
+                        Wrap Angle Radians (radians)
+                    */
+
+                    // Parse the Value of 'lineTensionInput' to Use in Calculation
+                    const lineTension = parseFloat(lineTensionInput.value);
+
+                    // Define Aluminum Distributed Load (Imperial)
+                    const aluminumImpLoad = ((2 * lineTension) + 0 + aluminumImpShell) * (wrapAngleRadians);
+
+
+                    /* 
+                        Define Aluminum Dead Shaft Deflection (Imperial)
+
+                        Where:
+                            δ = Deflection of Center (in) (Hold ALT + 235 to type 'δ')
+                            aluminumImpLoad = Distributed Load (lb/in)
+                            rollerFace = Face Width of Roller (in) (Raised to the Fourth Power in This Equation)
+                            384 = Constant Specific to These Loading and Support Conditions
+                            aluminumImpModulus = Shell Modulus of Aluminum (lb/in^2)
+                            areaMomentOfInertia = Area Moment of Inertia of the Shell (in^4)
+
+                        Roller Face Units (in)
+                        Aluminum Deflection for a Dead Shaft (in)
+                    */
+
+                    // Parse the Value of 'rollerFaceInput' to Use in Calculation
+                    const rollerFace = parseFloat(rollerFaceInput.value);
+
+                    // Define Aluminum Deflection for a Dead Shaft (Imperial)
+                    const aluminumImpDeadDeflection = (δ * aluminumImpLoad * (rollerFace ** 4)) / (384 * aluminumImpModulus * areaMomentOfInertia);
+
+                    // Change the Value of 'aluminumDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for an Aluminum Dead Shaft (Imperial)
+                    aluminumDeflection.value = aluminumImpDeadDeflection.toFixed(6);
+
+
+
+                    /* 
+                        Define Steel Shell Weight (Imperial)
+                        Steel Shell Weight (lb/in)
+                        Finish Diameter & Inside Diameter Units (in)
+                    */
+                    const steelImpShell = (steelImpDensity * (Math.PI / 4) * (finishDiameter ** 2 - insideDiameter ** 2));
+
+
+                    /* 
+                        Define Steel Distributed Load (Imperial)
+                        Steel Distributed Load (lb/in)
+                        Line Tension Units (lb/in)
+                        Steel Shell Weight (lb/in)
+                        Wrap Angle Radians (radians)
+                    */
+                    const steelImpLoad = ((2 * lineTension) + 0 + steelImpShell) * (wrapAngleRadians);
+
+
+                    /* 
+                        Define Steel Dead Shaft Deflection (Imperial)
+
+                        Where:
+                            δ = Deflection of Center (in) (Hold ALT + 235 to type 'δ')
+                            steelImpLoad = Distributed Load (lb/in)
+                            rollerFace = Face Width of Roller (in) (Raised to the Fourth Power in This Equation)
+                            384 = Constant Specific to These Loading and Support Conditions
+                            steelImpModulus = Shell Modulus of Steel (lb/in^2)
+                            areaMomentOfInertia = Area Moment of Inertia of the Shell (in^4)
+
+                        Steel Deflection for a Dead Shaft (in)
+                    */
+                    const steelImpDeadDeflection = (δ * steelImpLoad * (rollerFace ** 4)) / (384 * steelImpModulus * areaMomentOfInertia);
+
+                    // Change the Value of 'steelDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Steel Dead Shaft (Imperial)
+                    steelDeflection.value = steelImpDeadDeflection.toFixed(6);
+
+
+
+                    /* 
+                        Define Stainless Shell Weight (Imperial)
+                        Stainless Shell Weight (lb/in)
+                        Finish Diameter & Inside Diameter Units (in)
+                    */
+                    const stainlessImpShell = (stainlessImpDensity * (Math.PI / 4) * (finishDiameter ** 2 - insideDiameter ** 2));
+
+
+                    /* 
+                        Define Stainless Distributed Load (Imperial)
+                        Stainless Distributed Load (lb/in)
+                        Line Tension Units (lb/in)
+                        Stainless Shell Weight (lb/in)
+                        Wrap Angle Radians (radians)
+                    */
+                    const stainlessImpLoad = ((2 * lineTension) + 0 + stainlessImpShell) * (wrapAngleRadians);
+
+
+                    /* 
+                        Define Stainless Dead Shaft Deflection (Imperial)
+
+                        Where:
+                            δ = Deflection of Center (in) (Hold ALT + 235 to type 'δ')
+                            stainlessImpLoad = Distributed Load (lb/in)
+                            rollerFace = Face Width of Roller (in) (Raised to the Fourth Power in This Equation)
+                            384 = Constant Specific to These Loading and Support Conditions
+                            stainlessImpModulus = Shell Modulus of Stainless (lb/in^2)
+                            areaMomentOfInertia = Area Moment of Inertia of the Shell (in^4)
+
+                        Stainless Deflection for a Dead Shaft (in)
+                    */
+                    const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+
+                    // Change the Value of 'stainlessDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Stainless Dead Shaft (Imperial)
+                    stainlessDeflection.value = stainlessImpDeadDeflection.toFixed(6);
+
+
+                }
+                
+                function metricDeflection() {
+
+                    /* 
+                        Define Constant Density & Modulus Values of Metals (Metric)
+                        Density Units (kg/m^3)
+                        Modulus Units (N/m^2)
+                    */
+                    const aluminumMetDensity = 2710;
+                    const aluminumMetModulus = 6.9e10;
+
+                    const steelMetDensity = 7860;
+                    const steelMetModulus = 2.0e11;
+
+                    const stainlessMetDensity = 8000;
+                    const stainlessMetModulus = 1.9e11;
+
+
+                    /* 
+                        Define Constant Deflection of Center Value (Metric)
+                        δ Units (m)
+                    */
+                    const δ = 5;
+
+
+                    /*
+                        Define Constant Mass Density of Metals Accounting for the Force of Gravity (Metric)
+                        Aluminum Mass Density Units (kg/m^3)
+                        Steel Mass Density Units (kg/m^3)
+                        Stainless Mass Density Units (kg/m^3)
+                    */
+                    const aluminumMetMassDensity = aluminumMetDensity * 9.807;
+                    const steelMetMassDensity = aluminumMetDensity * 9.807;
+                    const stainlessMetMassDensity = aluminumMetDensity * 9.807;
+
+
+                    /* 
+                        Define Area Moment of Inertia (Metric)
+                        Finish Diameter & Inside Diameter Units (mm)
+                        Area Moment of Inertia Units (m^4)
+                    */
+
+                    // Parse the Values of 'finishDiameterInput' & 'insideDiameterInput' to Use in Calculation
+                    const finishDiameter = parseFloat(finishDiameterInput.value);
+                    const insideDiameter = parseFloat(insideDiameterOutput.value);
+
+                    // Define Constant Area Moment of Inertia (Metric)
+                    const areaMomentOfInertia = (Math.PI / 64) * (finishDiameter ** 4 - insideDiameter ** 4);
+
+                    /*
+                        Define the Value of Wrap Angle to Use in the 'Total Distributed Load' Calculation
+                        This Deflection Equation Assumes That the Rollers Are Wrapped 180° Pulling Downward
+                        Therefore We Can Also Assume This Value is '1' When the Wrap Angle is 180°
+                        The Below Sine Calculation is to Provide a More Accurate Deflection Calculation Based on the Wrap Angle Value (0°-180°)
+                        Wrap Angle Units (degrees)
+                        Wrap Angle Radians (radians)
+                    */
+
+                    // Parse the Value of 'wrapAngleInput' to Use in Calculation
+                    const wrapAngle = parseFloat(wrapAngleInput.value);
+
+                    // Sine Calculation for Half of the Wrap Angle (Wrap Angle in Radians)
+                    const wrapAngleRadians = Math.sin((wrapAngle * Math.PI / 180) / (2));
+
+
+                    /* 
+                        Define Aluminum Shell Weight (Metric)
+                        Aluminum Shell Weight Units (N/m)
+                        Alumimum Mass Density Units (kg/m^3)
+                        Finish Diameter & Inside Diameter Units (mm)
+                    */
+                    const aluminumMetShell = (aluminumMetMassDensity * (Math.PI / 4) * (finishDiameter ** 2 - insideDiameter ** 2));
+
+
+                    /* 
+                        Define Aluminum Distributed Load (Metric)
+                        Line Tension Units (N/m)
+                        Aluminum Distributed Load Units (N/m)
+                        Aluminum Shell Weight Units (N/m)
+                        Wrap Angle Radians (radians)
+                    */
+
+                    // Parse the Value of 'lineTensionInput' to Use in Calculation
+                    const lineTension = parseFloat(lineTensionInput.value);
+
+                    // Define Aluminum Distributed Load (Metric)
+                    const aluminumMetLoad = ((2 * lineTension) + 0 + aluminumMetShell) * (wrapAngleRadians);
+
+
+                    /* 
+                        Define Aluminum Dead Shaft Deflection (Metric)
+
+                        Where:
+                            δ = Deflection of Center (m) (Hold ALT + 235 to type 'δ')
+                            aluminumMetLoad = Distributed Load (N/m)
+                            rollerFace = Face Width of Roller (mm) (Raised to the Fourth Power in This Equation)
+                            384 = Constant Specific to These Loading and Support Conditions
+                            aluminumMetModulus = Shell Modulus of Aluminum (N/m^2)
+                            areaMomentOfInertia = Area Moment of Inertia of the Shell (m^4)
+
+                        Roller Face Units (mm)
+                        Aluminum Deflection for a Dead Shaft Units (mm)
+                    */
+
+                    // Parse the Value of 'rollerFaceInput' to Use in Calculation
+                    const rollerFace = parseFloat(rollerFaceInput.value);
+
+                    // Define Aluminum Deflection for a Dead Shaft (Metric)
+                    const aluminumMetDeadDeflection = (δ * aluminumMetLoad * (rollerFace ** 4)) / (384 * aluminumMetModulus * areaMomentOfInertia);
+
+                    // Change the Value of 'aluminumDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for an Aluminum Dead Shaft (Metric)
+                    aluminumDeflection.value = aluminumMetDeadDeflection.toFixed(6);
+                    console.log("Metric Aluminum Deflection Sent.");
+
+
+                    /* 
+                        Define Steel Shell Weight (Metric)
+                        Steel Shell Weight Units (N/m)
+                        Steel Mass Density Units (kg/m^3)
+                        Finish Diameter & Inside Diameter Units (mm)
+                    */
+                    const steelMetShell = (steelMetMassDensity * (Math.PI / 4) * (finishDiameter ** 2 - insideDiameter ** 2));
+
+
+                    /* 
+                        Define Steel Distributed Load (Metric)
+                        Steel Distributed Load Units (N/m)
+                        Line Tension Units (N/m)
+                        Steel Shell Weight (N/m)
+                        Wrap Angle Radians (radians)
+                    */
+                    const steelMetLoad = ((2 * lineTension) + 0 + steelMetShell) * (wrapAngleRadians);
+
+
+                    /* 
+                        Define Steel Dead Shaft Deflection (Metric)
+
+                        Where:
+                            δ = Deflection of Center (m) (Hold ALT + 235 to type 'δ')
+                            steelMetLoad = Distributed Load (N/m)
+                            rollerFace = Face Width of Roller (mm) (Raised to the Fourth Power in This Equation)
+                            384 = Constant Specific to These Loading and Support Conditions
+                            steelMetModulus = Shell Modulus of Steel (N/m^2)
+                            areaMomentOfInertia = Area Moment of Inertia of the Shell (m^4)
+
+                        Steel Deflection for a Dead Shaft (mm)
+                    */
+                    const steelMetDeadDeflection = (δ * steelMetLoad * (rollerFace ** 4)) / (384 * steelMetModulus * areaMomentOfInertia);
+
+                    // Change the Value of 'steelDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Steel Dead Shaft (Metric)
+                    steelDeflection.value = steelMetDeadDeflection.toFixed(6);
+                    console.log("Metric Steel Deflection Sent.")
+
+
+
+                    /* 
+                        Define Stainless Shell Weight (Metric)
+                        Stainless Shell Weight Units (N/m)
+                        Stainless Mass Density Units (kg/m^3)
+                        Finish Diameter & Inside Diameter Units (mm)
+                    */
+                    const stainlessMetShell = (stainlessMetMassDensity * (Math.PI / 4) * (finishDiameter ** 2 - insideDiameter ** 2));
+
+
+                    /* 
+                        Define Stainless Distributed Load (Metric)
+                        Stainless Distributed Load Units (N/m)
+                        Line Tension Units (N/m)
+                        Stainless Shell Weight Units (N/m)
+                        Wrap Angle Radians (radians)
+                    */
+                    const stainlessMetLoad = ((2 * lineTension) + 0 + stainlessMetShell) * (wrapAngleRadians);
+
+
+                    /* 
+                        Define Stainless Dead Shaft Deflection (Metric)
+
+                        Where:
+                            δ = Deflection of Center (Hold ALT + 235 to type 'δ')
+                            stainlessMetLoad = Distributed Load (N/m)
+                            rollerFace = Face Width of Roller (mm) (Raised to the Fourth Power in This Equation)
+                            384 = Constant Specific to These Loading and Support Conditions
+                            stainlessMetModulus = Shell Modulus of Stainless (N/m^2)
+                            areaMomentOfInertia = Area Moment of Inertia of the Shell (m^4)
+
+                        Stainless Deflection for a Dead Shaft (mm)
+                    */
+                    const stainlessMetDeadDeflection = (δ * stainlessMetLoad * (rollerFace ** 4)) / (384 * stainlessMetModulus * areaMomentOfInertia);
+                    //const stainlessMetDeadDeflection = ((12 * b2b - 7 * rollerFace ** 3) )
+
+                    // Change the Value of 'stainlessDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Stainless Dead Shaft (Metric)
+                    stainlessDeflection.value = stainlessMetDeadDeflection.toFixed(6);
+                    console.log("Metric Stainless Deflection Sent.");
+
+                }
+
+            });
+    
+        </script>
+
+    </body>
+
+</html>

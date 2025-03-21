@@ -1,0 +1,50 @@
+Imperial/Metric Select + Event Listers - WRITTEN
+
+Other Specs:
+	
+	Coating - WRITTEN
+	Roller Type - WRITTEN
+	Shaft Length - WRITTEN
+	Shaft Tap - WRITTEN
+	Temperature Tolerance - WRITTEN - ADD HIGHLIGHT ERROR
+	Web Speed - WRITTEN
+
+Event Listeners on all fields - DONE
+
+Live Shaft Calculator - PARTIAL
+
+Refactored Calculators - DONE
+
+Event Listeners for Deflection Classification - NA
+
+Left Off adding 'Other Specs' + Event Listeners - DONE
+
+Write code for b2b to be disabled if 'Dead Shaft' is selected - DONE
+
+
+
+Version 2
+
+ASK KYLE MINIMUM WRAP ANGLE
+
+Rewrite Html File to be asynchronous - DONE
+
+Infuse JavaScript to handle all Calculations - SO CLOSE (JUST NEED LIVE SHAFT CALCULATIONS)
+
+Redesign CSS file - PARTIAL (PROTOTYPE)
+
+RFQ Functionality
+
+NIP LOAD?
+
+Create JavaScript to allow finish diameter, inside diameter, and wall thickness to dynamically alter each other
+
+IMPLEMENT INPUT VALIDATION & RULES
+
+DOUBLE CHECK INSIDE ROLLER DOCUMENTATION
+
+DOUBLE CHECK EQUATION DOCUMENTATION
+
+IMPERIAL & METRIC FUNCTIONALITY DEAD SHAFT - COMPLETE
+
+IMPERIAL & METRIC CONVERTER - DONE
