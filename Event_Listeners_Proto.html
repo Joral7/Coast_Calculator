@@ -388,7 +388,7 @@
                                             <div class="input_wrap">
 
                                                 <label for="b2b">Bearing-to-Bearing:</label>
-                                                <input type="number" step="0.01" name="b2b" id="b2b" disabled><br>
+                                                <input type="number" step="0.01" name="b2b" id="b2b" value="1.0" disabled><br>
                                                 <span id="b2bUnits">in</span>
 
                                             </div>
@@ -446,7 +446,7 @@
                                             <div class="input_wrap">
 
                                                 <label for="shaftLength">Shaft Length:</label>
-                                                <input type="number" step="0.01" name="shaftLength" id="shaftLength" value="20.0"></input><br>
+                                                <input type="number" step="0.01" name="shaftLength" id="shaftLength" value="52.0"></input><br>
                                                 <span id="shaftLengthUnits">in</span>
 
                                             </div>
@@ -519,7 +519,7 @@
                                             <div class="input_wrap">
 
                                                 <label for="webWidth">Web Width:</label>
-                                                <input type="number" min="0.0" step="0.1" name="webWidth" id="webWidth" value="0.0"></input>
+                                                <input type="number" min="0.0" step="0.1" name="webWidth" id="webWidth" value="32.0"></input>
                                                 <span id="webWidthUnits">in</span>
 
                                             </div>
@@ -556,7 +556,7 @@
                                             <div class="input_wrap">
 
                                                 <label for="webSpeed">Web Speed:</label>
-                                                <input type="number" min="0.0" step="0.1" name="webSpeed" id="webSpeed" value="0.0"></input>
+                                                <input type="number" min="0.0" step="0.1" name="webSpeed" id="webSpeed" value="80.0"></input>
                                                 <span id="webSpeedUnits">fpm</span>
 
                                             </div>
@@ -801,14 +801,8 @@
                         </div>
 
                     </div>
-            
-                    <div class="footer">
 
-                        <button type="FRQ" id="FRQ">Request A Quote<br>
-        
-                    </div>
-
-                    <div class="footer">
+                    <div class="deflectionClassifications">
 
                         <fieldset>
                             <h3>Deflection Classifications</h3>
@@ -825,10 +819,13 @@
                             <label for="class_d">Class D - conveyors and cores</label>
                             <output type="number" name="class_a"></output><br>
                             <br>
+                            <div id = "RFQ">
+                                <button type="FRQ" id="FRQ">Request A Quote</button><br>
+                            </div>
+                            <br>
                         </fieldset>
 
                     </div>
-
                 </div>
             
         </main>
@@ -911,7 +908,7 @@
                     aluminumDeflectionUnits.textContent = isImperial ? "in" : "mm";
                     steelDeflectionUnits.textContent = isImperial ? "in" : "mm";
                     stainlessDeflectionUnits.textContent = isImperial ? "in" : "mm";
-    
+                    
                     calcInsideDiameter();
 
                     return {
@@ -929,8 +926,8 @@
                     const unitAndShaftState = updateUnits();
                     updateConsoleLog(unitAndShaftState);
                     unitConversion(unitAndShaftState);
-                    imperialDeflection();
-                    metricDeflection();
+                    imperialDeflection(unitAndShaftState);
+                    metricDeflection(unitAndShaftState);
 
                 });
     
@@ -945,12 +942,69 @@
 
                         b2b.disabled = deadOrAliveSelect. value !== 'Live';
 
-                        imperialDeflection();
-                        metricDeflection();
+                        //imperialDeflection(unitAndShaftState);
+                        //metricDeflection(unitAndShaftState);
                     });
     
                 }
-    
+                
+                window.addEventListener('load', function() {
+
+                    originalRollerFaceValue = parseFloat(rollerFaceInput.value);
+                    console.log("Default Roller Face Value Loaded", + originalRollerFaceValue);
+
+                    originalFinishDiameterValue = parseFloat(finishDiameterInput.value);
+                    console.log("Default Finish Diameter Value Loaded", + originalFinishDiameterValue);
+
+                    originalWallThicknessValue = parseFloat(wallThicknessInput.value);
+                    console.log("Default Wall Thickness Value Loaded", originalWallThicknessValue);
+                    calcInsideDiameter();
+
+                    originalInsideDiameterValue = parseFloat(insideDiameterOutput.value);
+                    console.log("Default Inside Diameter Value Loaded", originalInsideDiameterValue);
+
+                    originalLineTensionValue = parseFloat(lineTensionInput.value);
+                    console.log("Default Line Tension Value Loaded", originalLineTensionValue);
+
+                    originalWrapAngleValue = parseFloat(wrapAngleInput.value);
+                    console.log("Default Wrap Angle Value Loaded", originalWrapAngleValue);
+
+                    originalb2bValue = parseFloat(b2bInput.value);
+                    console.log("Default b2b Value Loaded", originalb2bValue);
+
+                    originalShaftLengthValue = parseFloat(shaftLengthInput.value);
+                    console.log("Default Shaft Length Value Loaded", originalShaftLengthValue);
+
+                    originalWebWidthValue = parseFloat(webWidthInput.value);
+                    console.log("Default Web Width Value Loaded", originalWebWidthValue);
+
+                    originalWebSpeedValue = parseFloat(webSpeedInput.value);
+                    console.log("Default Web Speed Value Loaded", originalWebSpeedValue);
+
+                    originalTempToleranceValue = parseFloat(tempToleranceInput.value);
+                    console.log("Default Temperature Tolerance Value Loaded", originalTempToleranceValue);
+
+                    const unitAndShaftState = updateUnits();
+
+                    if (unitAndShaftState.imperial) {
+
+                        console.log("Imperial Deflection Calculated.");
+                        imperialDeflection(unitAndShaftState);
+
+                    } else if (!unitAndShaftState.imperial) {
+
+                        console.log("Metric Deflection Calculated.");
+                        metricDeflection(unitAndShaftState);
+
+                    } else {
+
+                    console.log("Ruined.")
+
+                    }
+
+                })
+                
+
                 rollerFaceInput.addEventListener('input', function(){
 
                     originalRollerFaceValue = parseFloat(this.value);
@@ -960,12 +1014,12 @@
                     if (unitAndShaftState.imperial) {
 
                         console.log("Imperial Deflection Calculated.");
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial) {
 
                         console.log("Metric Deflection Calculated.");
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
@@ -986,12 +1040,12 @@
                     if (unitAndShaftState.imperial) {
 
                         console.log("Imperial Deflection Calculated.");
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial) {
 
                         console.log("Metric Deflection Calculated.");
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
@@ -1036,12 +1090,12 @@
                     if (unitAndShaftState.imperial) {
 
                         console.log("Imperial Deflection Calculated.");
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial) {
 
                         console.log("Metric Deflection Calculated.");
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
@@ -1061,12 +1115,12 @@
                     if (unitAndShaftState.imperial) {
 
                         console.log("Imperial Deflection Calculated.");
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial) {
 
                         console.log("Metric Deflection Calculated.");
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
@@ -1086,12 +1140,12 @@
                     if (unitAndShaftState.imperial) {
 
                         console.log("Imperial Deflection Calculated.");
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial) {
 
                         console.log("Metric Deflection Calculated.");
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
@@ -1107,23 +1161,23 @@
                     originalb2bValue = parseFloat(this.value);
                     console.log(originalb2bValue);
                     const unitAndShaftState = updateUnits();
-                    /*
+                    
                     if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
 
                         console.log("Imperial Deflection Calculated.");
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial && !unitAndShaftState.dead) {
 
                         console.log("Metric Deflection Calculated.");
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
                         console.log("Ruined.")
 
                     }
-                    */
+                    
 
                 })
 
@@ -1168,21 +1222,27 @@
 
                         console.log("Imperial units and Dead shaft selected");
                         //unitConversion(unitAndShaftState);
-                        imperialDeflection();
+                        imperialDeflection(unitAndShaftState);
 
                     } else if (!unitAndShaftState.imperial && unitAndShaftState.dead) {
 
                         console.log("Metric units and Dead shaft selected");
                         //unitConversion(unitAndShaftState);
-                        metricDeflection();
+                        metricDeflection(unitAndShaftState);
 
                     } else if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
 
                         console.log("Imperial units and Live shaft selected");
+                        imperialDeflection(unitAndShaftState);
+
+                    } else if (!unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        console.log("Metric units and Live Shaft selected");
+                        metricDeflection(unitAndShaftState);
 
                     } else {
 
-                        console.log("Metric units and Live Shaft selected");
+                        console.log("Ruined.");
 
                     }
 
@@ -1665,7 +1725,7 @@
                 //}
 
 
-                function imperialDeflection() {
+                function imperialDeflection(unitAndShaftState) {
 
                     /* 
                         Define Constant Density & Modulus Values of Metals (Imperial)
@@ -1691,6 +1751,13 @@
                         δ Units (in)
                     */
                     const δ = 5;
+
+
+                    /*
+                        Parse the Value of 'b2bInput' to Use in Live Shaft Calculation
+                        Bearing to Bearing Lenght Units (in)
+                    */
+                    const b2b = parseFloat(b2bInput.value);
 
 
                     /* 
@@ -1764,11 +1831,34 @@
                     const rollerFace = parseFloat(rollerFaceInput.value);
 
                     // Define Aluminum Deflection for a Dead Shaft (Imperial)
-                    const aluminumImpDeadDeflection = (δ * aluminumImpLoad * (rollerFace ** 4)) / (384 * aluminumImpModulus * areaMomentOfInertia);
+                    // const aluminumImpDeadDeflection = (δ * aluminumImpLoad * (rollerFace ** 4)) / (384 * aluminumImpModulus * areaMomentOfInertia);
 
                     // Change the Value of 'aluminumDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for an Aluminum Dead Shaft (Imperial)
-                    aluminumDeflection.value = aluminumImpDeadDeflection.toFixed(6);
+                    // aluminumDeflection.value = aluminumImpDeadDeflection.toFixed(6);
 
+
+                    const aluminumImpDeadDeflection = (δ * aluminumImpLoad * (rollerFace ** 4)) / (384 * aluminumImpModulus * areaMomentOfInertia);
+
+
+                    //const steelImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (steelImpLoad * (rollerFace ** 3))) / (384 * steelImpModulus * areaMomentOfInertia);
+                    const aluminumImpLiveDeflection = (((12 * b2b) - (7 * rollerFace)) * ((aluminumImpLoad) * ((rollerFace) ** (3))) / ((384) * (aluminumImpModulus) * (areaMomentOfInertia)));
+
+
+                    if (unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        aluminumDeflection.value = aluminumImpDeadDeflection.toFixed(6);
+                        console.log("Imp Aluminum Dead Shaft Roller Sent");
+
+                    } else if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        aluminumDeflection.value = aluminumImpLiveDeflection.toFixed(6);
+                        console.log("Imp Aluminum Live Shaft Roller Sent");
+
+                    } else {
+
+                        console.log("Ruined.");
+
+                    }
 
 
                     /* 
@@ -1802,10 +1892,34 @@
 
                         Steel Deflection for a Dead Shaft (in)
                     */
-                    const steelImpDeadDeflection = (δ * steelImpLoad * (rollerFace ** 4)) / (384 * steelImpModulus * areaMomentOfInertia);
+                    //const steelImpDeadDeflection = (δ * steelImpLoad * (rollerFace ** 4)) / (384 * steelImpModulus * areaMomentOfInertia);
 
                     // Change the Value of 'steelDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Steel Dead Shaft (Imperial)
-                    steelDeflection.value = steelImpDeadDeflection.toFixed(6);
+                    //steelDeflection.value = steelImpDeadDeflection.toFixed(6);
+
+
+                    const steelImpDeadDeflection = (δ * steelImpLoad * (rollerFace ** 4)) / (384 * steelImpModulus * areaMomentOfInertia);
+
+
+                    //const steelImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (steelImpLoad * (rollerFace ** 3))) / (384 * steelImpModulus * areaMomentOfInertia);
+                    const steelImpLiveDeflection = (((12 * b2b) - (7 * rollerFace)) * ((steelImpLoad) * ((rollerFace) ** (3))) / ((384) * (steelImpModulus) * (areaMomentOfInertia)));
+
+
+                    if (unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        steelDeflection.value = steelImpDeadDeflection.toFixed(6);
+                        console.log("Imp Steel Dead Shaft Roller Sent");
+
+                    } else if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        steelDeflection.value = steelImpLiveDeflection.toFixed(6);
+                        console.log("Imp Steel Live Shaft Roller Sent");
+
+                    } else {
+
+                        console.log("Ruined.");
+
+                    }
 
 
 
@@ -1840,15 +1954,38 @@
 
                         Stainless Deflection for a Dead Shaft (in)
                     */
-                    const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                    //const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 3)) / (384 * stainlessImpModulus * areaMomentOfInertia);
 
                     // Change the Value of 'stainlessDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Stainless Dead Shaft (Imperial)
-                    stainlessDeflection.value = stainlessImpDeadDeflection.toFixed(6);
+                    //stainlessDeflection.value = stainlessImpDeadDeflection.toFixed(6);
 
+                    const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+
+                    //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                    const stainlessImpLiveDeflection = (((12 * b2b) - (7 * rollerFace)) * ((stainlessImpLoad) * ((rollerFace ** 3))) / ((384 * stainlessImpModulus * areaMomentOfInertia)));
+
+
+                    if (unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        //const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        stainlessDeflection.value = stainlessImpDeadDeflection.toFixed(6);
+                        console.log("Stainless Imp Dead Shaft Roller Sent");
+
+                    } else if (unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        stainlessDeflection.value = stainlessImpLiveDeflection.toFixed(6);
+                        console.log("Stainless Imp Live Shaft Roller Sent");
+
+                    } else {
+
+                        console.log("Ruined.");
+
+                    }
 
                 }
                 
-                function metricDeflection() {
+                function metricDeflection(unitAndShaftState) {
 
                     /* 
                         Define Constant Density & Modulus Values of Metals (Metric)
@@ -1870,6 +2007,13 @@
                         δ Units (m)
                     */
                     const δ = 5;
+
+
+                    /*
+                        Parse the Value of 'b2bInput' to Use in Live Shaft Calculation
+                        Bearing to Bearing Lenght Units (mm)
+                    */
+                    const b2b = parseFloat(b2bInput.value);
 
 
                     /*
@@ -1955,11 +2099,39 @@
                     const rollerFace = parseFloat(rollerFaceInput.value);
 
                     // Define Aluminum Deflection for a Dead Shaft (Metric)
-                    const aluminumMetDeadDeflection = (δ * aluminumMetLoad * (rollerFace ** 4)) / (384 * aluminumMetModulus * areaMomentOfInertia);
+                    // const aluminumMetDeadDeflection = (δ * aluminumMetLoad * (rollerFace ** 4)) / (384 * aluminumMetModulus * areaMomentOfInertia);
 
                     // Change the Value of 'aluminumDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for an Aluminum Dead Shaft (Metric)
-                    aluminumDeflection.value = aluminumMetDeadDeflection.toFixed(6);
-                    console.log("Metric Aluminum Deflection Sent.");
+                    //aluminumDeflection.value = aluminumMetDeadDeflection.toFixed(6);
+                    //console.log("Metric Aluminum Deflection Sent.");
+
+
+
+                    //const stainlessMetDeadDeflection = (δ * stainlessMetLoad * (rollerFace ** 4)) / (384 * stainlessMetModulus * areaMomentOfInertia);
+                    const aluminumMetDeadDeflection = (δ * aluminumMetLoad * (rollerFace ** 4)) / (384 * aluminumMetModulus * areaMomentOfInertia);
+
+                    //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                    const aluminumMetLiveDeflection = (((12 * b2b) - (7 * rollerFace)) * ((aluminumMetLoad) * ((rollerFace ** 3))) / ((384 * aluminumMetModulus * areaMomentOfInertia)));
+
+
+                    if (!unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        //const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        aluminumDeflection.value = aluminumMetDeadDeflection.toFixed(6);
+                        console.log("Metric Aluminum Dead Deflection Sent.");
+
+                    } else if (!unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        aluminumDeflection.value = aluminumMetLiveDeflection.toFixed(6);
+                        console.log("Metric Aluminum Live Deflection Sent.");
+
+                    } else {
+
+                        console.log("Ruined.");
+
+                    }
+
 
 
                     /* 
@@ -1994,13 +2166,38 @@
 
                         Steel Deflection for a Dead Shaft (mm)
                     */
-                    const steelMetDeadDeflection = (δ * steelMetLoad * (rollerFace ** 4)) / (384 * steelMetModulus * areaMomentOfInertia);
+                    //const steelMetDeadDeflection = (δ * steelMetLoad * (rollerFace ** 4)) / (384 * steelMetModulus * areaMomentOfInertia);
 
                     // Change the Value of 'steelDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Steel Dead Shaft (Metric)
-                    steelDeflection.value = steelMetDeadDeflection.toFixed(6);
-                    console.log("Metric Steel Deflection Sent.")
+                    //steelDeflection.value = steelMetDeadDeflection.toFixed(6);
+                    //console.log("Metric Steel Deflection Sent.")
 
 
+
+                    //const stainlessMetDeadDeflection = (δ * stainlessMetLoad * (rollerFace ** 4)) / (384 * stainlessMetModulus * areaMomentOfInertia);
+                    const steelMetDeadDeflection = (δ * steelMetLoad * (rollerFace ** 4)) / (384 * steelMetModulus * areaMomentOfInertia);
+
+                    //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                    const steelMetLiveDeflection = (((12 * b2b) - (7 * rollerFace)) * ((steelMetLoad) * ((rollerFace ** 3))) / ((384 * steelMetModulus * areaMomentOfInertia)));
+
+
+                    if (!unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        //const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        steelDeflection.value = steelMetDeadDeflection.toFixed(6);
+                        console.log("Metric Steel Dead Deflection Sent.");
+
+                    } else if (!unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        steelDeflection.value = steelMetLiveDeflection.toFixed(6);
+                        console.log("Metric Steel Live Deflection Sent.");
+
+                    } else {
+
+                        console.log("Ruined.");
+
+                    }
 
                     /* 
                         Define Stainless Shell Weight (Metric)
@@ -2034,12 +2231,38 @@
 
                         Stainless Deflection for a Dead Shaft (mm)
                     */
-                    const stainlessMetDeadDeflection = (δ * stainlessMetLoad * (rollerFace ** 4)) / (384 * stainlessMetModulus * areaMomentOfInertia);
+                    //const stainlessMetDeadDeflection = (δ * stainlessMetLoad * (rollerFace ** 4)) / (384 * stainlessMetModulus * areaMomentOfInertia);
                     //const stainlessMetDeadDeflection = ((12 * b2b - 7 * rollerFace ** 3) )
 
                     // Change the Value of 'stainlessDeflection' to a Formatted (Six Decimal Places) Version of the Calculated Deflection for a Stainless Dead Shaft (Metric)
-                    stainlessDeflection.value = stainlessMetDeadDeflection.toFixed(6);
-                    console.log("Metric Stainless Deflection Sent.");
+                    //stainlessDeflection.value = stainlessMetDeadDeflection.toFixed(6);
+                    //console.log("Metric Stainless Deflection Sent.");
+
+
+
+                    const stainlessMetDeadDeflection = (δ * stainlessMetLoad * (rollerFace ** 4)) / (384 * stainlessMetModulus * areaMomentOfInertia);
+
+                    //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                    const stainlessMetLiveDeflection = (((12 * b2b) - (7 * rollerFace)) * ((stainlessMetLoad) * ((rollerFace ** 3))) / ((384 * stainlessMetModulus * areaMomentOfInertia)));
+
+
+                    if (!unitAndShaftState.imperial && unitAndShaftState.dead) {
+
+                        //const stainlessImpDeadDeflection = (δ * stainlessImpLoad * (rollerFace ** 4)) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        stainlessDeflection.value = stainlessMetDeadDeflection.toFixed(6);
+                        console.log("Metric Stainless Dead Deflection Sent.");
+
+                    } else if (!unitAndShaftState.imperial && !unitAndShaftState.dead) {
+
+                        //const stainlessImpLiveDeflection = ((12 * b2b) - (7 * rollerFace) * (stainlessImpLoad * (rollerFace ** 3))) / (384 * stainlessImpModulus * areaMomentOfInertia);
+                        stainlessDeflection.value = stainlessMetLiveDeflection.toFixed(6);
+                        console.log("Metric Stainless Live Deflection Sent.");
+
+                    } else {
+
+                        console.log("Ruined.");
+
+                    }
 
                 }
 

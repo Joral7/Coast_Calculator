@@ -15,11 +15,23 @@ main {
     padding: 20px;
 }
 
+/* Style the header */
+h2 {
+    background-color: #0e2691;
+    color: #FFFFFF;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 35px;
+}
+
+/*
 .h2 {
     text-align: center;
     margin-bottom: 20px;
     color: #333;
 }
+*/
 
 #container {
     display: flex;
@@ -117,14 +129,14 @@ output {
     color: #007bff;
 }
 
-#requestQuote {
+#RFQ {
     text-align: center;
     margin-top: 20px;
 }
 
-#requestQuote button {
+#RFQ button {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #0e2691;
     color: white;
     border: none;
     border-radius: 4px;
@@ -132,7 +144,7 @@ output {
     font-size: 16px;
 }
 
-#requestQuote button:hover {
+#RFQ button:hover {
     background-color: #0056b3;
 }
 
